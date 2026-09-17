@@ -31,14 +31,7 @@ object NotificationHelper {
         if (!canNotify(context)) return
         ensureChannel(context)
         val copy = reminderCopy(message)
-        val openHistoryIntent = PendingIntent.getActivity(
-            context,
-            message.id.hashCode(),
-            Intent(context, MainActivity::class.java)
-                .putExtra(EXTRA_OPEN_HISTORY, true)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
+        val openHistoryIntent = historyPendingIntent(context, message.id)
         if (android.os.Build.VERSION.SDK_INT >= 36) {
             showProgressReminder(context, message, openHistoryIntent, copy)
             return
@@ -51,7 +44,6 @@ object NotificationHelper {
             .setContentIntent(openHistoryIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
-            .addAction(0, "예약 취소", cancelIntent)
             .build()
         NotificationManagerCompat.from(context).notify(reminderNotificationId(message.id), notification)
     }
@@ -102,6 +94,7 @@ object NotificationHelper {
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message.content))
+            .setContentIntent(historyPendingIntent(context, message.id))
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(completionNotificationId(message.id), notification)
@@ -125,6 +118,17 @@ object NotificationHelper {
         ).apply { description = "예약 문자 사전 알림과 발송 결과" }
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
+
+    private fun historyPendingIntent(context: Context, messageId: Long): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            messageId.hashCode(),
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_OPEN_HISTORY, true)
+                .putExtra(MessageAlarmScheduler.EXTRA_MESSAGE_ID, messageId)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
     private fun reminderCopy(message: ScheduledMessage): ReminderCopy {
         val remainingMillis = message.sendAtMillis - System.currentTimeMillis()

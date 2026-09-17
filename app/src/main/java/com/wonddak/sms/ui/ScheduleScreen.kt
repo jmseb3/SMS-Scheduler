@@ -192,30 +192,8 @@ fun ScheduleScreen(
                     enabled = canSchedule,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("발송 예약") }
-                Text("예약 내역", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "등록된 예약은 발송 전까지 취소할 수 있습니다.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
-        if (appState.messages.isEmpty()) {
-            item { Text("아직 예약된 문자가 없습니다.", modifier = Modifier.padding(vertical = 24.dp)) }
-        } else {
-            items(appState.messages, key = { it.id }) { message ->
-                ScheduledMessageCard(
-                    message = message,
-                    onCancel = {
-                        scheduler.cancel(message.id)
-                        com.wonddak.sms.scheduling.NotificationHelper.cancelReminder(context, message.id)
-                        appState.removePendingMessage(message)
-                        notify("예약을 취소했습니다.")
-                    },
-                )
-            }
-        }
-        item { Box(Modifier.padding(bottom = 8.dp)) }
     }
 }
 
@@ -286,37 +264,5 @@ private fun DateTimeChooser(value: Long, onChange: (Long) -> Unit) {
             ).show()
         }) { Text("시간") }
         Text(formatter.format(Date(value)), modifier = Modifier.padding(top = 12.dp))
-    }
-}
-
-@Composable
-private fun ScheduledMessageCard(message: ScheduledMessage, onCancel: () -> Unit) {
-    val formatter = remember { SimpleDateFormat("M월 d일 HH:mm", Locale.KOREAN) }
-    val statusText = when (message.status) {
-        MessageStatus.PENDING -> "대기 중"
-        MessageStatus.SENT -> "발송됨"
-        MessageStatus.FAILED -> "발송 실패"
-    }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = when (message.status) {
-                MessageStatus.PENDING -> MaterialTheme.colorScheme.surface
-                MessageStatus.SENT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-                MessageStatus.FAILED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f)
-            },
-        ),
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("${message.contactName} · ${message.phoneNumber}")
-                Text(statusText, color = MaterialTheme.colorScheme.primary)
-            }
-            Text(formatter.format(Date(message.sendAtMillis)), style = MaterialTheme.typography.labelMedium)
-            Text(message.content, style = MaterialTheme.typography.bodyMedium)
-            if (message.status == MessageStatus.PENDING) {
-                TextButton(onClick = onCancel) { Text("예약 취소") }
-            }
-        }
     }
 }

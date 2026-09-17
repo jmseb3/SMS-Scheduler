@@ -1,6 +1,5 @@
 package com.wonddak.sms.ui
 
-import android.app.Activity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
@@ -14,33 +13,32 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wonddak.sms.data.AppStore
-import com.wonddak.sms.scheduling.NotificationHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SmsSchedulerApp(store: AppStore) {
+fun SmsSchedulerApp(
+    store: AppStore,
+    openHistoryRequest: Int = 0,
+    openHistoryMessageId: Long = -1L,
+) {
     val appState = remember { AppState(store) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val context = LocalContext.current
-    val initialTab = remember {
-        if ((context as? Activity)?.intent?.getBooleanExtra(NotificationHelper.EXTRA_OPEN_HISTORY, false) == true) 1 else 0
-    }
-    var selectedTab by remember { mutableIntStateOf(initialTab) }
+    var selectedTab by remember { mutableIntStateOf(if (openHistoryRequest > 0) 1 else 0) }
     val tabs = listOf("예약", "예약내역", "템플릿", "연락처")
 
     DisposableEffect(lifecycleOwner) {
@@ -49,6 +47,10 @@ fun SmsSchedulerApp(store: AppStore) {
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(openHistoryRequest) {
+        if (openHistoryRequest > 0) selectedTab = 1
     }
 
     Scaffold(
@@ -97,7 +99,13 @@ fun SmsSchedulerApp(store: AppStore) {
         }
         when (selectedTab) {
             0 -> ScheduleScreen(appState, notify, Modifier.padding(padding))
-            1 -> HistoryScreen(appState, notify, Modifier.padding(padding))
+            1 -> HistoryScreen(
+                appState = appState,
+                notify = notify,
+                modifier = Modifier.padding(padding),
+                targetMessageId = openHistoryMessageId,
+                navigationRequest = openHistoryRequest,
+            )
             2 -> TemplateScreen(appState, Modifier.padding(padding))
             else -> ContactScreen(appState, notify, Modifier.padding(padding))
         }
