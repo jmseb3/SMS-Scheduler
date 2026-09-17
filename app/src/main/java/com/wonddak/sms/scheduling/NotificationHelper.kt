@@ -3,11 +3,15 @@ package com.wonddak.sms.scheduling
 import android.annotation.SuppressLint
 import android.Manifest
 import android.app.NotificationChannel
+import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.Icon
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +34,10 @@ object NotificationHelper {
                 .putExtra(MessageAlarmScheduler.EXTRA_MESSAGE_ID, message.id),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        if (android.os.Build.VERSION.SDK_INT >= 36) {
+            showProgressReminder(context, message, cancelIntent)
+            return
+        }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_monochrome)
             .setContentTitle("문자 발송 1시간 전")
@@ -38,6 +46,45 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .addAction(0, "예약 취소", cancelIntent)
+            .build()
+        NotificationManagerCompat.from(context).notify(reminderNotificationId(message.id), notification)
+    }
+
+    @RequiresApi(36)
+    @SuppressLint("MissingPermission")
+    private fun showProgressReminder(
+        context: Context,
+        message: ScheduledMessage,
+        cancelIntent: PendingIntent,
+    ) {
+        val progressStyle = Notification.ProgressStyle()
+            .setStyledByProgress(false)
+            .setProgress(0)
+            .setProgressSegments(
+                listOf(Notification.ProgressStyle.Segment(100).setColor(Color.rgb(13, 107, 104))),
+            )
+            .setProgressPoints(
+                listOf(
+                    Notification.ProgressStyle.Point(1).setColor(Color.rgb(13, 107, 104)),
+                    Notification.ProgressStyle.Point(100).setColor(Color.rgb(180, 94, 57)),
+                ),
+            )
+        val notification = Notification.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+            .setContentTitle("문자 발송 1시간 전")
+            .setContentText("${message.contactName}님에게 보낼 문자가 준비되어 있습니다.")
+            .setSubText("예약됨 → 발송 예정")
+            .setWhen(message.sendAtMillis)
+            .setShowWhen(true)
+            .setStyle(progressStyle)
+            .setAutoCancel(true)
+            .addAction(
+                Notification.Action.Builder(
+                    Icon.createWithResource(context, R.drawable.ic_launcher_monochrome),
+                    "예약 취소",
+                    cancelIntent,
+                ).build(),
+            )
             .build()
         NotificationManagerCompat.from(context).notify(reminderNotificationId(message.id), notification)
     }

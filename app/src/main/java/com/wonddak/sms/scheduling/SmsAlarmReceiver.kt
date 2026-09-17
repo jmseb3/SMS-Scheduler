@@ -37,6 +37,7 @@ class SmsAlarmReceiver : BroadcastReceiver() {
             onFailure = { MessageStatus.FAILED },
         )
         store.updateMessageStatus(messageId, status)
+        NotificationHelper.cancelReminder(context, messageId)
         NotificationHelper.showCompletion(context, message, status == MessageStatus.SENT)
     }
 }
