@@ -14,8 +14,14 @@ import com.wonddak.sms.scheduling.MessageAlarmScheduler
 import com.wonddak.sms.scheduling.NotificationHelper
 import com.wonddak.sms.ui.SmsSchedulerApp
 import com.wonddak.sms.ui.theme.SMSSchedulerTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var store: AppStore
+    @Inject lateinit var scheduler: MessageAlarmScheduler
+
     private var openHistoryRequest by mutableIntStateOf(0)
     private var openHistoryMessageId by mutableLongStateOf(-1L)
 
@@ -26,11 +32,11 @@ class MainActivity : ComponentActivity() {
             openHistoryRequest++
         }
         enableEdgeToEdge()
-        val store = AppStore(applicationContext)
         setContent {
             SMSSchedulerTheme(dynamicColor = false) {
                 SmsSchedulerApp(
                     store = store,
+                    scheduler = scheduler,
                     openHistoryRequest = openHistoryRequest,
                     openHistoryMessageId = openHistoryMessageId,
                 )

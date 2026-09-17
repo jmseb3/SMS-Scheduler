@@ -5,8 +5,14 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.wonddak.sms.model.ScheduledMessage
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MessageAlarmScheduler(private val context: Context) {
+@Singleton
+class MessageAlarmScheduler @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
     /** Returns true when Android allowed an exact alarm. */

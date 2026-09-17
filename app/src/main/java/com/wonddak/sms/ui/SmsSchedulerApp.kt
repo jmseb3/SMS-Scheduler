@@ -31,11 +31,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wonddak.sms.data.AppStore
+import com.wonddak.sms.scheduling.MessageAlarmScheduler
 import kotlinx.coroutines.launch
 
 @Composable
 fun SmsSchedulerApp(
     store: AppStore,
+    scheduler: MessageAlarmScheduler,
     openHistoryRequest: Int = 0,
     openHistoryMessageId: Long = -1L,
 ) {
@@ -100,9 +102,10 @@ fun SmsSchedulerApp(
             scope.launch { snackbarHostState.showSnackbar(message) }
         }
         when (selectedTab) {
-            0 -> ScheduleScreen(appState, notify, Modifier.padding(padding))
+            0 -> ScheduleScreen(appState, scheduler, notify, Modifier.padding(padding))
             1 -> HistoryScreen(
                 appState = appState,
+                scheduler = scheduler,
                 notify = notify,
                 modifier = Modifier.padding(padding),
                 targetMessageId = openHistoryMessageId,

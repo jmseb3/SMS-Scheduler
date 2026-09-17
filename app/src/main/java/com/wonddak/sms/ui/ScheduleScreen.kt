@@ -59,11 +59,11 @@ import java.util.TimeZone
 @Composable
 fun ScheduleScreen(
     appState: AppState,
+    scheduler: MessageAlarmScheduler,
     notify: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val scheduler = remember { MessageAlarmScheduler(context.applicationContext) }
     var selectedContact by remember { mutableStateOf<SmsContact?>(null) }
     var selectedTemplate by remember { mutableStateOf<MessageTemplate?>(null) }
     var content by remember { mutableStateOf("") }

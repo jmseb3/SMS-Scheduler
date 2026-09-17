@@ -6,11 +6,17 @@ import com.wonddak.sms.model.MessageStatus
 import com.wonddak.sms.model.MessageTemplate
 import com.wonddak.sms.model.ScheduledMessage
 import com.wonddak.sms.model.SmsContact
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONArray
 import org.json.JSONObject
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AppStore(context: Context) {
-    private val database = AppDatabase.getInstance(context)
+@Singleton
+class AppStore @Inject constructor(
+    private val database: AppDatabase,
+    @ApplicationContext context: Context,
+) {
     private val dao = database.appDao()
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 

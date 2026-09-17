@@ -9,13 +9,17 @@ import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import com.wonddak.sms.data.AppStore
 import com.wonddak.sms.model.MessageStatus
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SmsAlarmReceiver : BroadcastReceiver() {
+    @Inject lateinit var store: AppStore
+
     override fun onReceive(context: Context, intent: Intent) {
         val messageId = intent.getLongExtra(MessageAlarmScheduler.EXTRA_MESSAGE_ID, -1L)
         if (messageId < 0) return
 
-        val store = AppStore(context)
         val message = store.loadScheduledMessages().firstOrNull { it.id == messageId } ?: return
         if (message.status != MessageStatus.PENDING) return
 

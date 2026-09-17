@@ -32,13 +32,13 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     appState: AppState,
+    scheduler: MessageAlarmScheduler,
     notify: (String) -> Unit,
     modifier: Modifier = Modifier,
     targetMessageId: Long = -1L,
     navigationRequest: Int = 0,
 ) {
     val context = LocalContext.current
-    val scheduler = remember { MessageAlarmScheduler(context.applicationContext) }
     val pendingCount = appState.messages.count { it.status == MessageStatus.PENDING }
     val listState = rememberLazyListState()
 
