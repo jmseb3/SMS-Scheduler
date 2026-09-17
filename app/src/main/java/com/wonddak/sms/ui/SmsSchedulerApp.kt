@@ -1,5 +1,6 @@
 package com.wonddak.sms.ui
 
+import android.app.Activity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
@@ -19,11 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wonddak.sms.data.AppStore
+import com.wonddak.sms.scheduling.NotificationHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,8 +36,12 @@ fun SmsSchedulerApp(store: AppStore) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("예약", "템플릿", "연락처")
+    val context = LocalContext.current
+    val initialTab = remember {
+        if ((context as? Activity)?.intent?.getBooleanExtra(NotificationHelper.EXTRA_OPEN_HISTORY, false) == true) 1 else 0
+    }
+    var selectedTab by remember { mutableIntStateOf(initialTab) }
+    val tabs = listOf("예약", "예약내역", "템플릿", "연락처")
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -73,7 +80,7 @@ fun SmsSchedulerApp(store: AppStore) {
                     NavigationBarItem(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        icon = { Text(listOf("◷", "▤", "♙")[index], style = androidx.compose.material3.MaterialTheme.typography.titleMedium) },
+                        icon = { Text(listOf("◷", "▥", "▤", "♙")[index], style = androidx.compose.material3.MaterialTheme.typography.titleMedium) },
                         label = { Text(title) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
@@ -90,7 +97,8 @@ fun SmsSchedulerApp(store: AppStore) {
         }
         when (selectedTab) {
             0 -> ScheduleScreen(appState, notify, Modifier.padding(padding))
-            1 -> TemplateScreen(appState, Modifier.padding(padding))
+            1 -> HistoryScreen(appState, notify, Modifier.padding(padding))
+            2 -> TemplateScreen(appState, Modifier.padding(padding))
             else -> ContactScreen(appState, notify, Modifier.padding(padding))
         }
     }

@@ -10,13 +10,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.Icon
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.wonddak.sms.R
+import com.wonddak.sms.MainActivity
 import com.wonddak.sms.model.ScheduledMessage
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object NotificationHelper {
     private const val CHANNEL_ID = "scheduled_sms"
@@ -27,22 +30,25 @@ object NotificationHelper {
     fun showReminder(context: Context, message: ScheduledMessage) {
         if (!canNotify(context)) return
         ensureChannel(context)
-        val cancelIntent = PendingIntent.getBroadcast(
+        val copy = reminderCopy(message)
+        val openHistoryIntent = PendingIntent.getActivity(
             context,
             message.id.hashCode(),
-            Intent(context, CancelScheduledMessageReceiver::class.java)
-                .putExtra(MessageAlarmScheduler.EXTRA_MESSAGE_ID, message.id),
+            Intent(context, MainActivity::class.java)
+                .putExtra(EXTRA_OPEN_HISTORY, true)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         if (android.os.Build.VERSION.SDK_INT >= 36) {
-            showProgressReminder(context, message, cancelIntent)
+            showProgressReminder(context, message, openHistoryIntent, copy)
             return
         }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_monochrome)
-            .setContentTitle("문자 발송 1시간 전")
-            .setContentText("${message.contactName}님에게 보낼 예약 문자가 있습니다.")
+            .setContentTitle(copy.title)
+            .setContentText(copy.text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message.content))
+            .setContentIntent(openHistoryIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .addAction(0, "예약 취소", cancelIntent)
@@ -55,11 +61,13 @@ object NotificationHelper {
     private fun showProgressReminder(
         context: Context,
         message: ScheduledMessage,
-        cancelIntent: PendingIntent,
+        openHistoryIntent: PendingIntent,
+        copy: ReminderCopy,
     ) {
+        val progress = copy.progress
         val progressStyle = Notification.ProgressStyle()
             .setStyledByProgress(false)
-            .setProgress(0)
+            .setProgress(progress)
             .setProgressSegments(
                 listOf(Notification.ProgressStyle.Segment(100).setColor(Color.rgb(13, 107, 104))),
             )
@@ -71,20 +79,14 @@ object NotificationHelper {
             )
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_monochrome)
-            .setContentTitle("문자 발송 1시간 전")
-            .setContentText("${message.contactName}님에게 보낼 문자가 준비되어 있습니다.")
-            .setSubText("예약됨 → 발송 예정")
+            .setContentTitle(copy.title)
+            .setContentText(copy.text)
+            .setSubText(if (copy.isWithinHour) "곧 발송 → 내역에서 확인" else "예약됨 → 발송 예정")
             .setWhen(message.sendAtMillis)
             .setShowWhen(true)
             .setStyle(progressStyle)
+            .setContentIntent(openHistoryIntent)
             .setAutoCancel(true)
-            .addAction(
-                Notification.Action.Builder(
-                    Icon.createWithResource(context, R.drawable.ic_launcher_monochrome),
-                    "예약 취소",
-                    cancelIntent,
-                ).build(),
-            )
             .build()
         NotificationManagerCompat.from(context).notify(reminderNotificationId(message.id), notification)
     }
@@ -124,6 +126,39 @@ object NotificationHelper {
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
+    private fun reminderCopy(message: ScheduledMessage): ReminderCopy {
+        val remainingMillis = message.sendAtMillis - System.currentTimeMillis()
+        val isWithinHour = remainingMillis < ONE_HOUR
+        val remainingMinutes = ((remainingMillis + MINUTE - 1) / MINUTE).coerceAtLeast(1)
+        val time = SimpleDateFormat("HH:mm", Locale.KOREAN).format(Date(message.sendAtMillis))
+        return if (isWithinHour) {
+            ReminderCopy(
+                title = "문자 발송 예정 · ${remainingMinutes}분 후",
+                text = "${message.contactName}님에게 ${time}에 발송됩니다.",
+                progress = ((ONE_HOUR - remainingMillis).coerceIn(0L, ONE_HOUR) * 100 / ONE_HOUR).toInt(),
+                isWithinHour = true,
+            )
+        } else {
+            ReminderCopy(
+                title = "문자 발송 1시간 전",
+                text = "${message.contactName}님에게 보낼 예약 문자가 있습니다.",
+                progress = 0,
+                isWithinHour = false,
+            )
+        }
+    }
+
+    private data class ReminderCopy(
+        val title: String,
+        val text: String,
+        val progress: Int,
+        val isWithinHour: Boolean,
+    )
+
     private fun reminderNotificationId(id: Long): Int = id.hashCode() + REMINDER_NOTIFICATION_OFFSET
     private fun completionNotificationId(id: Long): Int = id.hashCode() + COMPLETION_NOTIFICATION_OFFSET
+
+    private const val MINUTE = 60 * 1000L
+    private const val ONE_HOUR = 60 * MINUTE
+    const val EXTRA_OPEN_HISTORY = "open_history"
 }
