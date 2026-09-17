@@ -1,7 +1,15 @@
 package com.wonddak.sms.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -9,8 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +33,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.wonddak.sms.data.AppStore
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmsSchedulerApp(
     store: AppStore,
@@ -40,6 +45,12 @@ fun SmsSchedulerApp(
     val lifecycleOwner = LocalLifecycleOwner.current
     var selectedTab by remember { mutableIntStateOf(if (openHistoryRequest > 0) 1 else 0) }
     val tabs = listOf("예약", "예약내역", "템플릿", "연락처")
+    val tabIcons = listOf(
+        Icons.Outlined.DateRange,
+        Icons.AutoMirrored.Outlined.List,
+        Icons.Outlined.Create,
+        Icons.Outlined.Person,
+    )
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -54,42 +65,33 @@ fun SmsSchedulerApp(
     }
 
     Scaffold(
-        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    androidx.compose.foundation.layout.Column {
-                        Text("문자 예약", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
-                        Text(
-                            "필요한 순간에 정확하게",
-                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background,
-                ),
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            NavigationBar(
-                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp,
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    NavigationBarItem(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        icon = { Text(listOf("◷", "▥", "▤", "♙")[index], style = androidx.compose.material3.MaterialTheme.typography.titleMedium) },
-                        label = { Text(title) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                            indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer,
-                        ),
-                    )
+            Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface)
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        NavigationBarItem(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            icon = {
+                                Icon(tabIcons[index], contentDescription = title)
+                            },
+                            label = { Text(title, maxLines = 1) },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.surface,
+                            ),
+                        )
+                    }
                 }
             }
         },

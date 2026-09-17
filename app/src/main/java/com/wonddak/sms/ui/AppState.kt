@@ -22,8 +22,23 @@ class AppState(private val store: AppStore) {
         messages.replaceWith(store.loadScheduledMessages().sortedByDescending { it.sendAtMillis })
     }
 
-    fun saveContact(id: Long?, name: String, phoneNumber: String) {
-        val item = SmsContact(id ?: nextId(), name.trim(), phoneNumber.trim())
+    fun saveContact(
+        id: Long?,
+        name: String,
+        phoneNumber: String,
+        memo: String = "",
+        templateValues: Map<String, String> = emptyMap(),
+    ) {
+        val item = SmsContact(
+            id = id ?: nextId(),
+            name = name.trim(),
+            phoneNumber = phoneNumber.trim(),
+            memo = memo.trim(),
+            templateValues = templateValues
+                .mapKeys { (key, _) -> key.trim() }
+                .mapValues { (_, value) -> value.trim() }
+                .filter { (key, value) -> key.isNotBlank() && value.isNotBlank() },
+        )
         contacts.upsert(item) { it.id == item.id }
         store.saveContacts(contacts)
     }

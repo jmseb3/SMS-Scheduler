@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wonddak.sms.model.MessageStatus
 import com.wonddak.sms.model.ScheduledMessage
@@ -53,7 +53,7 @@ fun HistoryScreen(
     ) {
         ScreenHeader(
             title = "예약 내역",
-            description = "발송 대기와 처리 결과를 한곳에서 확인하세요.",
+            description = "발송 대기, 완료, 실패 상태를 시간순으로 확인합니다.",
             modifier = Modifier.padding(top = 12.dp),
             trailing = { CountPill("${pendingCount}건 대기") },
         )
@@ -94,26 +94,50 @@ private fun ScheduledMessageCard(
         MessageStatus.SENT -> "발송됨"
         MessageStatus.FAILED -> "발송 실패"
     }
-    Card(
+    val statusColor = when (message.status) {
+        MessageStatus.PENDING -> MaterialTheme.colorScheme.primary
+        MessageStatus.SENT -> MaterialTheme.colorScheme.tertiary
+        MessageStatus.FAILED -> MaterialTheme.colorScheme.error
+    }
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        border = if (highlighted) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
-        colors = CardDefaults.cardColors(
-            containerColor = when (message.status) {
-                MessageStatus.PENDING -> MaterialTheme.colorScheme.surface
-                MessageStatus.SENT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-                MessageStatus.FAILED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f)
-            },
+        color = if (highlighted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.dp,
+            if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
         ),
+        shape = MaterialTheme.shapes.small,
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("${message.contactName} · ${message.phoneNumber}")
-                Text(statusText, color = MaterialTheme.colorScheme.primary)
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        message.contactName,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        message.phoneNumber,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                StatusTag(statusText, statusColor)
             }
-            Text(formatter.format(Date(message.sendAtMillis)), style = MaterialTheme.typography.labelMedium)
+            Text(
+                "발송 시각 · ${formatter.format(Date(message.sendAtMillis))}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text(message.content, style = MaterialTheme.typography.bodyMedium)
             if (message.status == MessageStatus.PENDING) {
-                TextButton(onClick = onCancel) { Text("예약 취소") }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onCancel) { Text("예약 취소", maxLines = 1) }
+                }
             }
         }
     }

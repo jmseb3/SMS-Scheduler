@@ -2,13 +2,13 @@ package com.wonddak.sms.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Ink = Color(0xFF102A2E)
-val Paper = Color(0xFFF5F8F7)
-val PaperElevated = Color(0xFFFFFFFF)
-val Teal = Color(0xFF0D6B68)
-val TealDark = Color(0xFF82D5C7)
-val TealContainer = Color(0xFFD5F1EB)
-val NavyContainer = Color(0xFFDDEAF3)
-val Terracotta = Color(0xFFB45E39)
-val Mist = Color(0xFFE6EFED)
-val MutedInk = Color(0xFF587074)
+val GridInk = Color(0xFF171B24)
+val GridPaper = Color(0xFFF8F9FC)
+val GridSurface = Color(0xFFFEFEFF)
+val GridBlue = Color(0xFF2453D4)
+val GridBlueLight = Color(0xFFDDE6FF)
+val GridRule = Color(0xFFD6DAE4)
+val GridMuted = Color(0xFF596170)
+val GridSoft = Color(0xFFF0F2F7)
+val GridError = Color(0xFFB3261E)
+val GridSuccess = Color(0xFF246B49)

@@ -1,6 +1,6 @@
-/* Hallmark · macrostructure: Workbench · tone: utilitarian-soft · anchor hue: teal/navy
- * theme: Cobalt-inspired · nav: N5 floating work surface · footer: none (native mobile shell)
- * pre-emit critique: P5 H4 E4 S4 R4 V4
+/* Hallmark · macrostructure: Narrative Workflow · tone: utilitarian-technical · anchor hue: ultramarine
+ * theme: Grid · nav: N7 numbered native work bar · footer: none (native mobile shell)
+ * pre-emit critique: P5 H5 E4 S5 R5 V5
  */
 package com.wonddak.sms.ui.theme
 
@@ -18,49 +18,54 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
-    primary = TealDark,
-    onPrimary = Ink,
-    primaryContainer = Color(0xFF164B48),
-    onPrimaryContainer = TealContainer,
-    secondary = Color(0xFFE0A184),
-    onSecondary = Ink,
-    tertiary = Color(0xFFA8CBE2),
-    background = Color(0xFF0E1E21),
-    onBackground = Color(0xFFE3EFEC),
-    surface = Color(0xFF12272A),
-    onSurface = Color(0xFFE3EFEC),
-    surfaceVariant = Color(0xFF263B3D),
-    onSurfaceVariant = Color(0xFFB6C8C5),
-    outline = Color(0xFF718986),
+    primary = Color(0xFFAFC6FF),
+    onPrimary = Color(0xFF08266E),
+    primaryContainer = Color(0xFF173B91),
+    onPrimaryContainer = Color(0xFFDDE6FF),
+    secondary = Color(0xFFBFC7D8),
+    onSecondary = Color(0xFF252B36),
+    secondaryContainer = Color(0xFF343B49),
+    onSecondaryContainer = Color(0xFFE3E7EF),
+    tertiary = Color(0xFF9CD6B8),
+    onTertiary = Color(0xFF073822),
+    background = Color(0xFF11141A),
+    onBackground = Color(0xFFE6E9F0),
+    surface = Color(0xFF171B22),
+    onSurface = Color(0xFFE6E9F0),
+    surfaceVariant = Color(0xFF252A34),
+    onSurfaceVariant = Color(0xFFBAC1CE),
+    outline = Color(0xFF4A5260),
+    error = Color(0xFFFFB4AB),
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Teal,
-    onPrimary = Color.White,
-    primaryContainer = TealContainer,
-    onPrimaryContainer = Ink,
-    secondary = Terracotta,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFF7E4D9),
-    onSecondaryContainer = Ink,
-    tertiary = Color(0xFF2E6387),
-    onTertiary = Color.White,
-    tertiaryContainer = NavyContainer,
-    onTertiaryContainer = Ink,
-    background = Paper,
-    onBackground = Ink,
-    surface = PaperElevated,
-    onSurface = Ink,
-    surfaceVariant = Mist,
-    onSurfaceVariant = MutedInk,
-    outline = Color(0xFFB9CBC7),
+    primary = GridBlue,
+    onPrimary = GridPaper,
+    primaryContainer = GridBlueLight,
+    onPrimaryContainer = Color(0xFF102A72),
+    secondary = GridMuted,
+    onSecondary = GridPaper,
+    secondaryContainer = GridSoft,
+    onSecondaryContainer = GridInk,
+    tertiary = GridSuccess,
+    onTertiary = GridPaper,
+    tertiaryContainer = Color(0xFFD9F3E4),
+    onTertiaryContainer = Color(0xFF154A32),
+    background = GridPaper,
+    onBackground = GridInk,
+    surface = GridSurface,
+    onSurface = GridInk,
+    surfaceVariant = GridSoft,
+    onSurfaceVariant = GridMuted,
+    outline = GridRule,
+    error = GridError,
 )
 
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(24.dp),
+    extraSmall = RoundedCornerShape(0.dp),
+    small = RoundedCornerShape(2.dp),
+    medium = RoundedCornerShape(2.dp),
+    large = RoundedCornerShape(4.dp),
 )
 
 @Composable
