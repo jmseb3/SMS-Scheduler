@@ -13,15 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,7 +36,7 @@ import com.wonddak.sms.model.SmsContact
 fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var editing by remember { mutableStateOf<SmsContact?>(null) }
-    var showDialog by remember { mutableStateOf(false) }
+    var showEditor by remember { mutableStateOf(false) }
     val contactPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -66,6 +62,19 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
         }
     }
 
+    if (showEditor) {
+        ContactEditorScreen(
+            initial = editing,
+            modifier = modifier,
+            onBack = { showEditor = false },
+            onSave = { name, phone, memo, templateValues ->
+                appState.saveContact(editing?.id, name, phone, memo, templateValues)
+                showEditor = false
+            },
+        )
+        return
+    }
+
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -77,7 +86,7 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { editing = null; showDialog = true },
+                onClick = { editing = null; showEditor = true },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) { Text("연락처 직접 추가", maxLines = 1) }
             OutlinedButton(
@@ -141,7 +150,7 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
                             ) {
-                                TextButton(onClick = { editing = contact; showDialog = true }) {
+                                TextButton(onClick = { editing = contact; showEditor = true }) {
                                     Text("수정", maxLines = 1)
                                 }
                                 TextButton(onClick = { appState.deleteContact(contact) }) {
@@ -154,116 +163,4 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
             }
         }
     }
-
-    if (showDialog) {
-        ContactDialog(
-            initial = editing,
-            onDismiss = { showDialog = false },
-            onSave = { name, phone, memo, templateValues ->
-                appState.saveContact(editing?.id, name, phone, memo, templateValues)
-                showDialog = false
-            },
-        )
-    }
-}
-
-@Composable
-private fun ContactDialog(
-    initial: SmsContact?,
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, Map<String, String>) -> Unit,
-) {
-    var name by remember(initial) { mutableStateOf(initial?.name.orEmpty()) }
-    var phone by remember(initial) { mutableStateOf(initial?.phoneNumber.orEmpty()) }
-    var memo by remember(initial) { mutableStateOf(initial?.memo.orEmpty()) }
-    var templateValues by remember(initial) {
-        mutableStateOf(initial?.templateValues?.entries?.map { it.key to it.value }.orEmpty())
-    }
-    val hasInvalidTemplateValue = templateValues.any { (key, value) ->
-        key.isBlank() || value.isBlank()
-    }
-    val hasDuplicateKey = templateValues.map { it.first.trim() }.distinct().size != templateValues.size
-    val hasReservedKey = templateValues.any { it.first.trim() == "이름" }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (initial == null) "연락처 추가" else "연락처 수정") },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedTextField(name, { name = it }, label = { Text("이름") }, singleLine = true)
-                OutlinedTextField(phone, { phone = it }, label = { Text("전화번호") }, singleLine = true)
-                OutlinedTextField(
-                    memo,
-                    { memo = it },
-                    label = { Text("메모 (선택)") },
-                    minLines = 2,
-                )
-                Text("누름틀 기본값", style = MaterialTheme.typography.labelMedium)
-                Text(
-                    "이 사람을 선택하면 같은 이름의 누름틀에 자동으로 입력됩니다.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                templateValues.forEachIndexed { index, (key, value) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        OutlinedTextField(
-                            key,
-                            { updated ->
-                                templateValues = templateValues.toMutableList().also {
-                                    it[index] = updated to value
-                                }
-                            },
-                            label = { Text("누름틀 이름") },
-                            placeholder = { Text("예: 회사명") },
-                            singleLine = true,
-                        )
-                        OutlinedTextField(
-                            value,
-                            { updated ->
-                                templateValues = templateValues.toMutableList().also {
-                                    it[index] = key to updated
-                                }
-                            },
-                            label = { Text("값") },
-                            singleLine = true,
-                        )
-                        TextButton(
-                            onClick = {
-                                templateValues = templateValues.toMutableList().also { it.removeAt(index) }
-                            },
-                        ) { Text("누름틀 값 삭제", color = MaterialTheme.colorScheme.error) }
-                    }
-                }
-                OutlinedButton(onClick = { templateValues = templateValues + ("" to "") }) {
-                    Text("누름틀 값 추가")
-                }
-                if (hasDuplicateKey) {
-                    Text(
-                        "누름틀 이름은 중복될 수 없습니다.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                if (hasReservedKey) {
-                    Text(
-                        "{{이름}} 값은 위 이름 항목에서 자동으로 가져옵니다.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank() && phone.isNotBlank() &&
-                    !hasInvalidTemplateValue && !hasDuplicateKey && !hasReservedKey,
-                onClick = {
-                    onSave(name, phone, memo, templateValues.associate { (key, value) -> key to value })
-                },
-            ) { Text("저장") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
-    )
 }

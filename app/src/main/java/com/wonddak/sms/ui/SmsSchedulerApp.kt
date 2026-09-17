@@ -1,6 +1,7 @@
 package com.wonddak.sms.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
@@ -98,21 +99,22 @@ fun SmsSchedulerApp(
             }
         },
     ) { padding ->
+        val contentModifier = Modifier.padding(padding).consumeWindowInsets(padding)
         val notify: (String) -> Unit = { message ->
             scope.launch { snackbarHostState.showSnackbar(message) }
         }
         when (selectedTab) {
-            0 -> ScheduleScreen(appState, scheduler, notify, Modifier.padding(padding))
+            0 -> ScheduleScreen(appState, scheduler, notify, contentModifier)
             1 -> HistoryScreen(
                 appState = appState,
                 scheduler = scheduler,
                 notify = notify,
-                modifier = Modifier.padding(padding),
+                modifier = contentModifier,
                 targetMessageId = openHistoryMessageId,
                 navigationRequest = openHistoryRequest,
             )
-            2 -> TemplateScreen(appState, Modifier.padding(padding))
-            else -> ContactScreen(appState, notify, Modifier.padding(padding))
+            2 -> TemplateScreen(appState, contentModifier)
+            else -> ContactScreen(appState, notify, contentModifier)
         }
     }
 }

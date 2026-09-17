@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
             openHistoryRequest++
         }
         enableEdgeToEdge()
+        window.isNavigationBarContrastEnforced = false
         setContent {
             SMSSchedulerTheme(dynamicColor = false) {
                 SmsSchedulerApp(
