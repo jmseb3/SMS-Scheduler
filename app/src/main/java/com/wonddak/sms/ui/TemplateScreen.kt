@@ -27,7 +27,11 @@ import com.wonddak.sms.model.MessageTemplate
 import com.wonddak.sms.model.TemplateEngine
 
 @Composable
-fun TemplateScreen(appState: AppState, modifier: Modifier = Modifier) {
+fun TemplateScreen(
+    appState: AppState,
+    modifier: Modifier = Modifier,
+    onDetailVisibilityChange: (Boolean) -> Unit = {},
+) {
     var editing by remember { mutableStateOf<MessageTemplate?>(null) }
     var showEditor by remember { mutableStateOf(false) }
 
@@ -35,10 +39,14 @@ fun TemplateScreen(appState: AppState, modifier: Modifier = Modifier) {
         TemplateEditorScreen(
             initial = editing,
             modifier = modifier,
-            onBack = { showEditor = false },
+            onBack = {
+                showEditor = false
+                onDetailVisibilityChange(false)
+            },
             onSave = { title, content ->
                 appState.saveTemplate(editing?.id, title, content)
                 showEditor = false
+                onDetailVisibilityChange(false)
             },
         )
         return
@@ -54,7 +62,11 @@ fun TemplateScreen(appState: AppState, modifier: Modifier = Modifier) {
             trailing = { CountPill("${appState.templates.size}개") },
         )
         Button(
-            onClick = { editing = null; showEditor = true },
+            onClick = {
+                editing = null
+                showEditor = true
+                onDetailVisibilityChange(true)
+            },
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         ) { Text("새 템플릿", maxLines = 1) }
         Surface(
@@ -111,7 +123,13 @@ fun TemplateScreen(appState: AppState, modifier: Modifier = Modifier) {
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
                             ) {
-                                TextButton(onClick = { editing = template; showEditor = true }) {
+                                TextButton(
+                                    onClick = {
+                                        editing = template
+                                        showEditor = true
+                                        onDetailVisibilityChange(true)
+                                    },
+                                ) {
                                     Text("수정", maxLines = 1)
                                 }
                                 TextButton(onClick = { appState.deleteTemplate(template) }) {

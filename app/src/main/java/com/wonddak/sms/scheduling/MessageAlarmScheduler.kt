@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.wonddak.sms.data.SettingsStore
 import com.wonddak.sms.model.ScheduledMessage
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -12,6 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class MessageAlarmScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val settingsStore: SettingsStore,
 ) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
@@ -21,6 +23,7 @@ class MessageAlarmScheduler @Inject constructor(
     }
 
     fun scheduleReminder(message: ScheduledMessage): Boolean {
+        if (!settingsStore.load().reminderEnabled) return false
         val reminderAt = maxOf(System.currentTimeMillis() + 1_000L, message.sendAtMillis - ONE_HOUR)
         return scheduleAt(message.id, reminderAt, ReminderAlarmReceiver::class.java, REMINDER_REQUEST_OFFSET)
     }
@@ -47,6 +50,10 @@ class MessageAlarmScheduler @Inject constructor(
 
     fun cancel(messageId: Long) {
         cancel(messageId, SmsAlarmReceiver::class.java, SEND_REQUEST_OFFSET)
+        cancel(messageId, ReminderAlarmReceiver::class.java, REMINDER_REQUEST_OFFSET)
+    }
+
+    fun cancelReminder(messageId: Long) {
         cancel(messageId, ReminderAlarmReceiver::class.java, REMINDER_REQUEST_OFFSET)
     }
 

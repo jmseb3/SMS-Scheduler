@@ -33,7 +33,12 @@ import androidx.compose.ui.unit.dp
 import com.wonddak.sms.model.SmsContact
 
 @Composable
-fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifier = Modifier) {
+fun ContactScreen(
+    appState: AppState,
+    notify: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    onDetailVisibilityChange: (Boolean) -> Unit = {},
+) {
     val context = LocalContext.current
     var editing by remember { mutableStateOf<SmsContact?>(null) }
     var showEditor by remember { mutableStateOf(false) }
@@ -66,10 +71,14 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
         ContactEditorScreen(
             initial = editing,
             modifier = modifier,
-            onBack = { showEditor = false },
+            onBack = {
+                showEditor = false
+                onDetailVisibilityChange(false)
+            },
             onSave = { name, phone, memo, templateValues ->
                 appState.saveContact(editing?.id, name, phone, memo, templateValues)
                 showEditor = false
+                onDetailVisibilityChange(false)
             },
         )
         return
@@ -86,7 +95,11 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { editing = null; showEditor = true },
+                onClick = {
+                    editing = null
+                    showEditor = true
+                    onDetailVisibilityChange(true)
+                },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) { Text("연락처 직접 추가", maxLines = 1) }
             OutlinedButton(
@@ -150,7 +163,13 @@ fun ContactScreen(appState: AppState, notify: (String) -> Unit, modifier: Modifi
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
                             ) {
-                                TextButton(onClick = { editing = contact; showEditor = true }) {
+                                TextButton(
+                                    onClick = {
+                                        editing = contact
+                                        showEditor = true
+                                        onDetailVisibilityChange(true)
+                                    },
+                                ) {
                                     Text("수정", maxLines = 1)
                                 }
                                 TextButton(onClick = { appState.deleteContact(contact) }) {

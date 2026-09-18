@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -23,6 +25,8 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -63,6 +67,7 @@ fun ScheduleScreen(
     scheduler: MessageAlarmScheduler,
     notify: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var selectedContact by remember { mutableStateOf<SmsContact?>(null) }
@@ -120,11 +125,16 @@ fun ScheduleScreen(
                 description = "수신자, 메시지, 발송 시각을 순서대로 설정합니다.",
                 modifier = Modifier.padding(top = 12.dp),
                 trailing = {
-                    CountPill("${appState.messages.count { it.status == MessageStatus.PENDING }}건 대기")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CountPill("${appState.messages.count { it.status == MessageStatus.PENDING }}건 대기")
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(Icons.Outlined.Settings, contentDescription = "설정")
+                        }
+                    }
                 },
             )
         }
-        item { BatteryOptimizationCard(notify = notify) }
+        item { SystemReadinessBanner(onOpenSettings = onOpenSettings) }
         item {
             ToolSection(index = "01", title = "수신자") {
                 Selector(

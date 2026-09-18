@@ -8,13 +8,16 @@ import android.content.pm.PackageManager
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import com.wonddak.sms.data.AppStore
+import com.wonddak.sms.data.SettingsStore
 import com.wonddak.sms.model.MessageStatus
+import com.wonddak.sms.model.ScheduledMessage
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SmsAlarmReceiver : BroadcastReceiver() {
     @Inject lateinit var store: AppStore
+    @Inject lateinit var settingsStore: SettingsStore
 
     override fun onReceive(context: Context, intent: Intent) {
         val messageId = intent.getLongExtra(MessageAlarmScheduler.EXTRA_MESSAGE_ID, -1L)
@@ -27,7 +30,7 @@ class SmsAlarmReceiver : BroadcastReceiver() {
             PackageManager.PERMISSION_GRANTED
         if (!canSend) {
             store.updateMessageStatus(messageId, MessageStatus.FAILED)
-            NotificationHelper.showCompletion(context, message, sent = false)
+            showCompletionIfEnabled(context, message, sent = false)
             return
         }
 
@@ -42,6 +45,16 @@ class SmsAlarmReceiver : BroadcastReceiver() {
         )
         store.updateMessageStatus(messageId, status)
         NotificationHelper.cancelReminder(context, messageId)
-        NotificationHelper.showCompletion(context, message, status == MessageStatus.SENT)
+        showCompletionIfEnabled(context, message, status == MessageStatus.SENT)
+    }
+
+    private fun showCompletionIfEnabled(
+        context: Context,
+        message: ScheduledMessage,
+        sent: Boolean,
+    ) {
+        if (settingsStore.load().completionNotificationsEnabled) {
+            NotificationHelper.showCompletion(context, message, sent)
+        }
     }
 }
