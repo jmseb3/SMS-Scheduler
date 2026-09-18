@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+apply(from = rootProject.file("keystore/signing.gradle"))
+
 android {
     namespace = "com.wonddak.sms"
     compileSdk {
@@ -16,7 +18,7 @@ android {
         minSdk = 31
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,6 +28,7 @@ android {
             optimization {
                 enable = false
             }
+            signingConfig = signingConfigs.findByName("sms")
         }
     }
     compileOptions {
